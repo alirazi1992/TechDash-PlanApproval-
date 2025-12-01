@@ -178,6 +178,8 @@ type ReportQueueItem = {
   sensitivity: string;
 };
 
+type DashboardHeaderTab = "general" | "workbench";
+
 // ------------------ Data ------------------
 const todayMetrics: Metric[] = [
   { id: "total", label: "کل گردش امروز", value: "۹۴ پرونده", helper: "همه فعالیت‌ها" },
@@ -527,6 +529,7 @@ const highlightToneClass = (tone?: FeatureHighlight["tone"]) => {
 // ------------------ View ------------------
 function TechnicianDashboardView() {
   const navigate = useNavigate();
+  const [headerTab, setHeaderTab] = useState<DashboardHeaderTab>("general");
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [calendarValue, setCalendarValue] = useState<DateObject | null>(
     new DateObject({ calendar: persian, locale: persian_fa })
@@ -607,6 +610,11 @@ function TechnicianDashboardView() {
 
   const availableTechnicians = mockAvatars.slice(0, 5);
 
+  const headerTabs: { id: DashboardHeaderTab; label: string }[] = [
+    { id: "general", label: "عمومی" },
+    { id: "workbench", label: "میزکار" },
+  ];
+
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-6 text-right">
@@ -635,6 +643,19 @@ function TechnicianDashboardView() {
           </div>
         </header>
 
+        <div className="flex items-center gap-2 flex-row">
+          {headerTabs.map((tab) => (
+            <Button
+              key={tab.id}
+              variant={headerTab === tab.id ? "primary" : "ghost"}
+              className="text-sm"
+              onClick={() => setHeaderTab(tab.id)}
+            >
+              {tab.label}
+            </Button>
+          ))}
+        </div>
+
         {statusMessage && (
           <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 flex items-center justify-between flex-row">
             <div className="flex items-center gap-2 flex-row">
@@ -651,336 +672,344 @@ function TechnicianDashboardView() {
           </div>
         )}
 
-        {/* Top metrics */}
-        <Card className="p-5 text-right">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 flex-row">
-            <div className="flex items-center gap-2 flex-row">
-              {(Object.keys(rangeLabels) as TimeRange[]).map((range) => (
-                <Button
-                  key={range}
-                  variant={timeRange === range ? "primary" : "ghost"}
-                  className={`px-3 py-1 text-sm ${timeRange === range ? "" : "text-gray-700"}`}
-                  onClick={() => setTimeRange(range)}
-                >
-                  {rangeLabels[range]}
-                </Button>
-              ))}
-            </div>
-            <div className="text-sm text-gray-500">نمای کلی عملکرد تیم</div>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {metrics.map((item) => (
-              <div key={item.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50">
-                <p className="text-sm text-gray-500">{item.label}</p>
-                <div className="mt-2 flex items-baseline justify-end gap-2">
-                  <span className="text-2xl font-semibold text-gray-900">{item.value}</span>
-                  <span className="text-xs text-gray-500">{item.helper}</span>
+        {headerTab === "general" && (
+          <>
+            {/* Top metrics */}
+            <Card className="p-5 text-right">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 flex-row">
+                <div className="flex items-center gap-2 flex-row">
+                  {(Object.keys(rangeLabels) as TimeRange[]).map((range) => (
+                    <Button
+                      key={range}
+                      variant={timeRange === range ? "primary" : "ghost"}
+                      className={`px-3 py-1 text-sm ${timeRange === range ? "" : "text-gray-700"}`}
+                      onClick={() => setTimeRange(range)}
+                    >
+                      {rangeLabels[range]}
+                    </Button>
+                  ))}
                 </div>
+                <div className="text-sm text-gray-500">نمای کلی عملکرد تیم</div>
               </div>
-            ))}
-          </div>
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            <div className="col-span-2 p-4 border border-gray-100 rounded-xl bg-white">
-              <div className="flex items-center justify-between mb-3 flex-row">
-                <p className="font-medium text-gray-800">حجم فعالیت</p>
-                <span className="text-sm text-gray-500">روند {rangeLabels[timeRange]}</span>
-              </div>
-              <AreaSpark data={sparkData} height={120} color="#2563eb" backgroundColor="#f8fafc" />
-            </div>
-            <div className="p-4 border border-gray-100 rounded-xl bg-white">
-              <div className="flex items-center justify-between mb-3 flex-row">
-                <p className="font-medium text-gray-800">توزیع فعالیت</p>
-                <span className="text-sm text-gray-500">{rangeLabels[timeRange]}</span>
-              </div>
-              <div className="flex items-center justify-center">
-                <Donut data={donutData} size={160} direction="rtl" centerLabel="مجموع کل" />
-              </div>
-              <div className="mt-3 space-y-2">
-                {donutData.map((item) => (
-                  <div key={item.label} className="flex items-center justify-between text-sm flex-row">
-                    <div className="flex items-center gap-2 flex-row">
-                      <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                      <span className="text-gray-700">{item.label}</span>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {metrics.map((item) => (
+                  <div key={item.id} className="p-4 border border-gray-100 rounded-xl bg-gray-50">
+                    <p className="text-sm text-gray-500">{item.label}</p>
+                    <div className="mt-2 flex items-baseline justify-end gap-2">
+                      <span className="text-2xl font-semibold text-gray-900">{item.value}</span>
+                      <span className="text-xs text-gray-500">{item.helper}</span>
                     </div>
-                    <span className="text-gray-900 font-medium">{item.value}</span>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Secondary stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {quickStats.map((stat) => (
-            <Card key={stat.id} className="p-4 border border-gray-100 bg-white">
-              <div className="flex items-center justify-between mb-2 flex-row">
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <span className={`text-xs px-2 py-1 rounded-lg border ${colorTone(stat.tone)}`}>
-                  {stat.change}
-                </span>
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 text-right">{stat.value}</div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Legacy technician workbench revived */}
-        <Card className="p-5 border border-gray-100 bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 flex-row">
-            <h2 className="text-lg font-semibold text-gray-900">میزکار فنی (نسخه قبلی)</h2>
-            <div className="flex flex-wrap gap-2 flex-row">
-              {workbenchProjects.map((project) => (
-                <Button
-                  key={project.id}
-                  variant={activeWorkbench === project.id ? "primary" : "ghost"}
-                  className="text-sm"
-                  onClick={() => setActiveWorkbench(project.id)}
-                >
-                  {project.utn}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {workbenchProjects
-            .filter((project) => project.id === activeWorkbench)
-            .map((project) => (
-              <div key={project.id} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
-                    <div className="flex items-center justify-between flex-row">
-                      <div className="flex items-center gap-2 flex-row">
-                        <span className="px-2 py-1 text-xs rounded-lg border border-gray-200">{project.utn}</span>
-                        <p className="font-semibold text-gray-900">{project.title}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">{project.due}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">محل: {project.location}</p>
-                    <p className="text-xs text-gray-500">تمرکز: {project.focus}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-700 flex-row">
-                      <span>مالک: {project.owner}</span>
-                      <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
-                        {project.capa}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full bg-white rounded-full border border-gray-100 overflow-hidden">
-                      <div
-                        className="h-full bg-indigo-500"
-                        style={{ width: `${project.progress}%` }}
-                      />
-                    </div>
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                <div className="col-span-2 p-4 border border-gray-100 rounded-xl bg-white">
+                  <div className="flex items-center justify-between mb-3 flex-row">
+                    <p className="font-medium text-gray-800">حجم فعالیت</p>
+                    <span className="text-sm text-gray-500">روند {rangeLabels[timeRange]}</span>
                   </div>
-
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50">
-                    <div className="text-sm font-medium text-gray-900 mb-2">جزئیات پرریسک</div>
-                    <div className="space-y-2">
-                      {project.callouts.map((callout) => (
-                        <div
-                          key={callout.id}
-                          className="flex items-center justify-between text-sm text-gray-700 flex-row"
-                        >
-                          <span className="text-gray-600">{callout.label}</span>
-                          <span className="px-2 py-1 rounded-lg border border-gray-200 bg-white">{callout.detail}</span>
+                  <AreaSpark data={sparkData} height={120} color="#2563eb" backgroundColor="#f8fafc" />
+                </div>
+                <div className="p-4 border border-gray-100 rounded-xl bg-white">
+                  <div className="flex items-center justify-between mb-3 flex-row">
+                    <p className="font-medium text-gray-800">توزیع فعالیت</p>
+                    <span className="text-sm text-gray-500">{rangeLabels[timeRange]}</span>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <Donut data={donutData} size={160} direction="rtl" centerLabel="مجموع کل" />
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {donutData.map((item) => (
+                      <div key={item.label} className="flex items-center justify-between text-sm flex-row">
+                        <div className="flex items-center gap-2 flex-row">
+                          <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                          <span className="text-gray-700">{item.label}</span>
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                      {project.risk}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-3">
-                    <div className="text-sm font-medium text-gray-900">ویژگی‌های فعال</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {project.features.map((feature) => (
-                        <button
-                          key={feature.id}
-                          className={`p-3 rounded-lg border text-right transition flex flex-col items-start gap-1 ${
-                            activeFeature === feature.id ? "border-indigo-200 bg-white shadow-sm" : "border-gray-100 bg-white"
-                          }`}
-                          onClick={() =>
-                            setActiveFeatureTab((prev) => ({
-                              ...prev,
-                              [project.id]: feature.id,
-                            }))
-                          }
-                        >
-                          <span className="text-sm font-semibold text-gray-900">{feature.label}</span>
-                          <span className="text-xs text-gray-500">{feature.helper}</span>
-                          {feature.count !== undefined && (
-                            <span className="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">
-                              {feature.count}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
+                        <span className="text-gray-900 font-medium">{item.value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
+              </div>
+            </Card>
 
-                {activeFeatureDetail && (
-                  <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-2 p-4 rounded-xl border border-gray-100 bg-white space-y-3">
-                      <div className="flex items-center justify-between flex-row mb-2">
-                        <h3 className="font-semibold text-gray-900">{project.features.find((f) => f.id === activeFeature)?.label}</h3>
-                        <span className="text-xs text-gray-500">نسخه احیا شده از داشبورد قبلی</span>
+            {/* Secondary stats */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {quickStats.map((stat) => (
+                <Card key={stat.id} className="p-4 border border-gray-100 bg-white">
+                  <div className="flex items-center justify-between mb-2 flex-row">
+                    <p className="text-sm text-gray-500">{stat.label}</p>
+                    <span className={`text-xs px-2 py-1 rounded-lg border ${colorTone(stat.tone)}`}>
+                      {stat.change}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-semibold text-gray-900 text-right">{stat.value}</div>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+
+        {headerTab === "workbench" && (
+          <Card className="p-5 border border-gray-100 bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 flex-row">
+              <h2 className="text-lg font-semibold text-gray-900">میزکار فنی (نسخه قبلی)</h2>
+              <div className="flex flex-wrap gap-2 flex-row">
+                {workbenchProjects.map((project) => (
+                  <Button
+                    key={project.id}
+                    variant={activeWorkbench === project.id ? "primary" : "ghost"}
+                    className="text-sm"
+                    onClick={() => setActiveWorkbench(project.id)}
+                  >
+                    {project.utn}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {workbenchProjects
+              .filter((project) => project.id === activeWorkbench)
+              .map((project) => (
+                <div key={project.id} className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-2">
+                      <div className="flex items-center justify-between flex-row">
+                        <div className="flex items-center gap-2 flex-row">
+                          <span className="px-2 py-1 text-xs rounded-lg border border-gray-200">{project.utn}</span>
+                          <p className="font-semibold text-gray-900">{project.title}</p>
+                        </div>
+                        <span className="text-xs text-gray-500">{project.due}</span>
                       </div>
-                      <p className="text-sm text-gray-700 leading-7">{activeFeatureDetail.summary}</p>
-                      <div className="grid gap-2 md:grid-cols-3">
-                        {activeFeatureDetail.highlights.map((highlight) => (
+                      <p className="text-sm text-gray-600">محل: {project.location}</p>
+                      <p className="text-xs text-gray-500">تمرکز: {project.focus}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-700 flex-row">
+                        <span>مالک: {project.owner}</span>
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
+                          {project.capa}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-white rounded-full border border-gray-100 overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500"
+                          style={{ width: `${project.progress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-gray-100 bg-gray-50">
+                      <div className="text-sm font-medium text-gray-900 mb-2">جزئیات پرریسک</div>
+                      <div className="space-y-2">
+                        {project.callouts.map((callout) => (
                           <div
-                            key={highlight.id}
-                            className={`p-3 rounded-lg border text-right ${highlightToneClass(highlight.tone)}`}
+                            key={callout.id}
+                            className="flex items-center justify-between text-sm text-gray-700 flex-row"
                           >
-                            <div className="text-xs text-gray-500">{highlight.helper}</div>
-                            <div className="text-lg font-semibold text-gray-900">{highlight.value}</div>
-                            <div className="text-sm text-gray-700">{highlight.label}</div>
+                            <span className="text-gray-600">{callout.label}</span>
+                            <span className="px-2 py-1 rounded-lg border border-gray-200 bg-white">{callout.detail}</span>
                           </div>
                         ))}
                       </div>
-                      <div className="space-y-2">
-                        {activeFeatureDetail.checklist.map((item) => (
-                          <label
-                            key={item.id}
-                            className="flex items-start gap-2 p-3 rounded-lg border border-gray-100 bg-gray-50 flex-row cursor-pointer"
-                          >
-                            <input type="checkbox" checked={item.done} readOnly className="mt-1" />
-                            <div>
-                              <p className={`text-sm font-medium ${item.done ? "line-through text-gray-500" : "text-gray-900"}`}>
-                                {item.label}
-                              </p>
-                              {item.note && <p className="text-xs text-gray-500">{item.note}</p>}
-                            </div>
-                          </label>
-                        ))}
+                      <div className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                        {project.risk}
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-xl border border-gray-100 bg-white space-y-2">
-                      <div className="text-sm font-semibold text-gray-900">اقدام فوری</div>
-                      {activeFeatureDetail.actions.map((action) => (
-                        <button
-                          key={action.id}
-                          onClick={() => handleFeatureAction(action.label)}
-                          className={`w-full text-right px-3 py-2 rounded-lg border transition flex flex-col gap-0.5 ${
-                            action.intent === "primary"
-                              ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
-                              : "bg-gray-50 border-gray-100 text-gray-800 hover:border-gray-200"
-                          }`}
-                        >
-                          <span className="text-sm font-semibold">{action.label}</span>
-                          {action.helper && <span className="text-xs opacity-80">{action.helper}</span>}
-                        </button>
-                      ))}
+                    <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-3">
+                      <div className="text-sm font-medium text-gray-900">ویژگی‌های فعال</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {project.features.map((feature) => (
+                          <button
+                            key={feature.id}
+                            className={`p-3 rounded-lg border text-right transition flex flex-col items-start gap-1 ${
+                              activeFeature === feature.id ? "border-indigo-200 bg-white shadow-sm" : "border-gray-100 bg-white"
+                            }`}
+                            onClick={() =>
+                              setActiveFeatureTab((prev) => ({
+                                ...prev,
+                                [project.id]: feature.id,
+                              }))
+                            }
+                          >
+                            <span className="text-sm font-semibold text-gray-900">{feature.label}</span>
+                            <span className="text-xs text-gray-500">{feature.helper}</span>
+                            {feature.count !== undefined && (
+                              <span className="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5">
+                                {feature.count}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
-        </Card>
 
-        {/* Tasks & calendar */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="p-5 bg-white border border-gray-100 lg:col-span-2">
-            <div className="flex items-center justify-between mb-4 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">کارهای اولویت‌دار</h2>
-              <Button
-                variant={showTaskForm ? "secondary" : "ghost"}
-                className="text-sm text-gray-700"
-                onClick={() => setShowTaskForm((prev) => !prev)}
-              >
-                <Icon name={showTaskForm ? "x" : "plus"} size={16} className="ml-2" />
-                {showTaskForm ? "بستن فرم" : "افزودن"}
-              </Button>
-            </div>
-            {showTaskForm && (
-              <div className="mb-4 grid gap-3 md:grid-cols-3 bg-slate-50 border border-slate-100 rounded-xl p-4">
-                <input
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
-                  placeholder="عنوان کار"
-                  value={taskForm.title}
-                  onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
-                />
-                <input
-                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
-                  placeholder="مسئول"
-                  value={taskForm.owner}
-                  onChange={(e) => setTaskForm((prev) => ({ ...prev, owner: e.target.value }))}
-                />
-                <div className="flex items-center gap-2">
+                  {activeFeatureDetail && (
+                    <div className="grid gap-4 lg:grid-cols-3">
+                      <div className="lg:col-span-2 p-4 rounded-xl border border-gray-100 bg-white space-y-3">
+                        <div className="flex items-center justify-between flex-row mb-2">
+                          <h3 className="font-semibold text-gray-900">{project.features.find((f) => f.id === activeFeature)?.label}</h3>
+                          <span className="text-xs text-gray-500">نسخه احیا شده از داشبورد قبلی</span>
+                        </div>
+                        <p className="text-sm text-gray-700 leading-7">{activeFeatureDetail.summary}</p>
+                        <div className="grid gap-2 md:grid-cols-3">
+                          {activeFeatureDetail.highlights.map((highlight) => (
+                            <div
+                              key={highlight.id}
+                              className={`p-3 rounded-lg border text-right ${highlightToneClass(highlight.tone)}`}
+                            >
+                              <div className="text-xs text-gray-500">{highlight.helper}</div>
+                              <div className="text-lg font-semibold text-gray-900">{highlight.value}</div>
+                              <div className="text-sm text-gray-700">{highlight.label}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-2">
+                          {activeFeatureDetail.checklist.map((item) => (
+                            <label
+                              key={item.id}
+                              className="flex items-start gap-2 p-3 rounded-lg border border-gray-100 bg-gray-50 flex-row cursor-pointer"
+                            >
+                              <input type="checkbox" checked={item.done} readOnly className="mt-1" />
+                              <div>
+                                <p className={`text-sm font-medium ${item.done ? "line-through text-gray-500" : "text-gray-900"}`}>
+                                  {item.label}
+                                </p>
+                                {item.note && <p className="text-xs text-gray-500">{item.note}</p>}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-gray-100 bg-white space-y-2">
+                        <div className="text-sm font-semibold text-gray-900">اقدام فوری</div>
+                        {activeFeatureDetail.actions.map((action) => (
+                          <button
+                            key={action.id}
+                            onClick={() => handleFeatureAction(action.label)}
+                            className={`w-full text-right px-3 py-2 rounded-lg border transition flex flex-col gap-0.5 ${
+                              action.intent === "primary"
+                                ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+                                : "bg-gray-50 border-gray-100 text-gray-800 hover:border-gray-200"
+                            }`}
+                          >
+                            <span className="text-sm font-semibold">{action.label}</span>
+                            {action.helper && <span className="text-xs opacity-80">{action.helper}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+          </Card>
+        )}
+
+        {headerTab === "workbench" && (
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="p-5 bg-white border border-gray-100 lg:col-span-2">
+              <div className="flex items-center justify-between mb-4 flex-row">
+                <h2 className="text-lg font-semibold text-gray-900">کارهای اولویت‌دار</h2>
+                <Button
+                  variant={showTaskForm ? "secondary" : "ghost"}
+                  className="text-sm text-gray-700"
+                  onClick={() => setShowTaskForm((prev) => !prev)}
+                >
+                  <Icon name={showTaskForm ? "x" : "plus"} size={16} className="ml-2" />
+                  {showTaskForm ? "بستن فرم" : "افزودن"}
+                </Button>
+              </div>
+              {showTaskForm && (
+                <div className="mb-4 grid gap-3 md:grid-cols-3 bg-slate-50 border border-slate-100 rounded-xl p-4">
                   <input
-                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
-                    placeholder="موعد"
-                    value={taskForm.due}
-                    onChange={(e) => setTaskForm((prev) => ({ ...prev, due: e.target.value }))}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
+                    placeholder="عنوان کار"
+                    value={taskForm.title}
+                    onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
                   />
-                  <Button variant="primary" className="px-3" onClick={handleAddTask}>
-                    ذخیره
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`p-4 rounded-xl border border-gray-100 bg-gray-50 flex items-start justify-between gap-3 flex-row ${
-                    task.done ? "opacity-70" : ""
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <p className={`font-medium text-gray-900 ${task.done ? "line-through" : ""}`}>{task.title}</p>
-                    <p className="text-sm text-gray-500">
-                      مالک: {task.owner} · {task.due}
-                    </p>
+                  <input
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
+                    placeholder="مسئول"
+                    value={taskForm.owner}
+                    onChange={(e) => setTaskForm((prev) => ({ ...prev, owner: e.target.value }))}
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-right"
+                      placeholder="موعد"
+                      value={taskForm.due}
+                      onChange={(e) => setTaskForm((prev) => ({ ...prev, due: e.target.value }))}
+                    />
+                    <Button variant="primary" className="px-3" onClick={handleAddTask}>
+                      ذخیره
+                    </Button>
                   </div>
-                  <Button
-                    variant={task.done ? "secondary" : "ghost"}
-                    className="text-sm text-gray-700"
-                    onClick={() => handleToggleTask(task.id)}
+                </div>
+              )}
+              <div className="space-y-3">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`p-4 rounded-xl border border-gray-100 bg-gray-50 flex items-start justify-between gap-3 flex-row ${
+                      task.done ? "opacity-70" : ""
+                    }`}
                   >
-                    <Icon name="check" size={16} className="ml-1" />
-                    {task.done ? "بازگردانی" : "تکمیل"}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-5 bg-white border border-gray-100">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">تقویم هماهنگی</h2>
-              <span className="text-sm text-gray-500">بازه هفتگی</span>
-            </div>
-            <DatePicker
-              calendar={persian}
-              locale={persian_fa}
-              value={calendarValue as any}
-              onChange={(value) => setCalendarValue(value as DateObject)}
-              className="w-full"
-              containerClassName="w-full"
-              inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
-            />
-            <div className="mt-4 space-y-2">
-              {dayEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-900 font-medium">{event.label}</p>
-                    <p className="text-xs text-gray-500">کانال: {event.channel}</p>
+                    <div className="space-y-1">
+                      <p className={`font-medium text-gray-900 ${task.done ? "line-through" : ""}`}>{task.title}</p>
+                      <p className="text-sm text-gray-500">
+                        مالک: {task.owner} · {task.due}
+                      </p>
+                    </div>
+                    <Button
+                      variant={task.done ? "secondary" : "ghost"}
+                      className="text-sm text-gray-700"
+                      onClick={() => handleToggleTask(task.id)}
+                    >
+                      <Icon name="check" size={16} className="ml-1" />
+                      {task.done ? "بازگردانی" : "تکمیل"}
+                    </Button>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-lg border ${event.badgeClass}`}>{`روز ${event.day}`}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+                ))}
+              </div>
+            </Card>
 
-        {/* Collaboration */}
-        <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="p-5 bg-white border border-gray-100">
+              <div className="flex items-center justify-between mb-3 flex-row">
+                <h2 className="text-lg font-semibold text-gray-900">تقویم هماهنگی</h2>
+                <span className="text-sm text-gray-500">بازه هفتگی</span>
+              </div>
+              <DatePicker
+                calendar={persian}
+                locale={persian_fa}
+                value={calendarValue as any}
+                onChange={(value) => setCalendarValue(value as DateObject)}
+                className="w-full"
+                containerClassName="w-full"
+                inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
+              />
+              <div className="mt-4 space-y-2">
+                {dayEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-900 font-medium">{event.label}</p>
+                      <p className="text-xs text-gray-500">کانال: {event.channel}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-lg border ${event.badgeClass}`}>{`روز ${event.day}`}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {headerTab === "general" && (
+          <>
+            {/* Collaboration */}
+            <div className="grid gap-4 lg:grid-cols-3">
           <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
             <div className="flex items-center justify-between mb-4 flex-row">
               <h2 className="text-lg font-semibold text-gray-900">برد هماهنگی تیمی</h2>
@@ -1229,6 +1258,8 @@ function TechnicianDashboardView() {
             </div>
           </Card>
         </div>
+          </>
+        )}
       </div>
     </AppShell>
   );
