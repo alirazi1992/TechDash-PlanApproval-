@@ -180,7 +180,11 @@ type ReportQueueItem = {
   sensitivity: string;
 };
 
-type DashboardHeaderTab = "general" | "teamCalendar" | "workbench";
+type DashboardHeaderTab =
+  | "general"
+  | "teamCalendar"
+  | "technicalCalendar"
+  | "workbench";
 
 // ------------------ Data ------------------
 const todayMetrics: Metric[] = [
@@ -627,7 +631,7 @@ function TechnicianDashboardView() {
   });
   const [eventForm, setEventForm] = useState({
     date: initialCollabCalendarEvents[0]?.date ?? "1403-07-23",
-    label: "", 
+    label: "",
     channel: "میدانی",
     time: "08:00",
   });
@@ -702,7 +706,10 @@ function TechnicianDashboardView() {
 
   const handleAddCalendarEvent = () => {
     const dateKey = eventForm.date || selectedDateKey;
-    if (!dateKey || !eventForm.label.trim()) return;
+    if (!dateKey || !eventForm.label.trim()) {
+      showMessage("عنوان و تاریخ رویداد را تکمیل کنید.");
+      return;
+    }
 
     const accentMeta = channelAccent[eventForm.channel] ?? channelAccent["QA"];
     const safeDate = toPersianDateObject(dateKey).format("YYYY-MM-DD");
@@ -720,19 +727,31 @@ function TechnicianDashboardView() {
       ...prev,
     ]);
 
-    setEventForm((prev) => ({ ...prev, label: "" }));
+    setEventForm((prev) => ({ ...prev, label: "", date: safeDate }));
     setCalendarValue(toPersianDateObject(safeDate));
     showMessage("رویداد جدید در تقویم فنی ثبت شد.");
+  };
+
+  const handleJumpToToday = () => {
+    const today = new DateObject({ calendar: persian, locale: persian_fa });
+    setCalendarValue(today);
+    setEventForm((prev) => ({ ...prev, date: today.format("YYYY-MM-DD") }));
+  };
+
+  const handleSyncEventDate = () => {
+    if (!selectedDateKey) return;
+    setEventForm((prev) => ({ ...prev, date: selectedDateKey }));
   };
 
   const metrics = metricsByRange[timeRange];
   const donutData = donutByRange[timeRange];
   const sparkData = sparkByRange[timeRange];
 
-  const selectedDateKey = useMemo(
-    () => calendarValue?.format("YYYY-MM-DD"),
-    [calendarValue]
-  );
+  const selectedDateKey = useMemo(() => {
+    if (calendarValue) return calendarValue.format("YYYY-MM-DD");
+    if (eventForm.date) return eventForm.date;
+    return initialCollabCalendarEvents[0]?.date ?? "";
+  }, [calendarValue, eventForm.date]);
 
   const dayEvents = useMemo(() => {
     if (!selectedDateKey) return [];
@@ -744,9 +763,7 @@ function TechnicianDashboardView() {
 
     const anchorDate = selectedDateKey
       ? selectedDateKey
-      : toPersianDateObject(new DateObject({ calendar: persian, locale: persian_fa }).format("YYYY-MM-DD")).format(
-          "YYYY-MM-DD"
-        );
+      : new DateObject({ calendar: persian, locale: persian_fa }).format("YYYY-MM-DD");
 
     return sorted.filter((event) => event.date >= anchorDate).slice(0, 4);
   }, [calendarEvents, selectedDateKey]);
@@ -755,6 +772,7 @@ function TechnicianDashboardView() {
 
   const headerTabs: { id: DashboardHeaderTab; label: string }[] = [
     { id: "general", label: "عمومی" },
+    { id: "technicalCalendar", label: "تقویم فنی" },
     { id: "teamCalendar", label: "تقویم تیمی" },
     { id: "workbench", label: "میزکار" },
   ];
@@ -1055,8 +1073,8 @@ function TechnicianDashboardView() {
         )}
 
         {headerTab === "workbench" && (
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="p-5 bg-white border border-gray-100 lg:col-span-2">
+          <div className="grid gap-4">
+            <Card className="p-5 bg-white border border-gray-100">
               <div className="flex items-center justify-between mb-4 flex-row">
                 <h2 className="text-lg font-semibold text-gray-900">کارهای اولویت‌دار</h2>
                 <Button
@@ -1121,91 +1139,75 @@ function TechnicianDashboardView() {
                 ))}
               </div>
             </Card>
+          </div>
+        )}
 
-            <Card className="p-5 bg-white border border-gray-100">
-              <div className="flex items-center justify-between mb-3 flex-row">
+        {headerTab === "technicalCalendar" && (
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 flex-row">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">تقویم فنی (شمسی)</h2>
-                  <p className="text-xs text-gray-500 mt-1">انتخاب تاریخ شمسی و رویدادهای فنی</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    جدول روزانه فارسی و شفاف‌سازی حضور فنی در تاریخ انتخابی
+                  </p>
                 </div>
-                <span className="text-sm text-gray-500">بازه هفتگی · فارسی</span>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-4 items-end mb-3">
-                <div className="md:col-span-2 space-y-1">
-                  <label className="text-xs text-gray-600">عنوان رویداد</label>
-                  <input
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
-                    placeholder="شرح رویداد فنی"
-                    value={eventForm.label}
-                    onChange={(e) => setEventForm((prev) => ({ ...prev, label: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-600">کانال</label>
-                  <select
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
-                    value={eventForm.channel}
-                    onChange={(e) => setEventForm((prev) => ({ ...prev, channel: e.target.value }))}
+                <div className="flex items-center gap-2 flex-row">
+                  <Button variant="ghost" className="text-sm" onClick={handleJumpToToday}>
+                    امروز
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="text-sm"
+                    onClick={handleSyncEventDate}
+                    disabled={!selectedDateKey}
                   >
-                    {Object.keys(channelAccent).map((channel) => (
-                      <option key={channel} value={channel}>
-                        {channel}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-600">زمان</label>
-                  <input
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
-                    value={eventForm.time}
-                    onChange={(e) => setEventForm((prev) => ({ ...prev, time: e.target.value }))}
-                    placeholder="08:00"
-                  />
-                </div>
-                <div className="md:col-span-4 grid grid-cols-2 gap-2">
-                  <DatePicker
-                    calendar={persian}
-                    locale={persian_fa}
-                    format="YYYY/MM/DD"
-                    value={eventForm.date as any}
-                    onChange={(value) =>
-                      setEventForm((prev) => ({
-                        ...prev,
-                        date: (value as DateObject)?.format("YYYY-MM-DD") ?? prev.date,
-                      }))
-                    }
-                    className="w-full"
-                    containerClassName="w-full"
-                    inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
-                  />
-                  <Button variant="primary" className="w-full" onClick={handleAddCalendarEvent}>
-                    <Icon name="plus" size={16} className="ml-2" />
-                    ثبت رویداد فنی
+                    استفاده از روز انتخابی در فرم
                   </Button>
                 </div>
               </div>
 
-              <DatePicker
-                calendar={persian}
-                locale={persian_fa}
-                format="YYYY/MM/DD"
-                value={calendarValue as any}
-                onChange={(value) => handleCalendarChange(value as DateObject)}
-                className="w-full"
-                containerClassName="w-full"
-                inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
-              />
-              <div className="flex items-center justify-between text-xs text-gray-500 mt-3 flex-row">
-                <span>
-                  {selectedDateKey
-                    ? `روز انتخابی: ${formatPersianDate(selectedDateKey, "dddd D MMMM YYYY")}`
-                    : "یک روز در تقویم انتخاب کنید"}
-                </span>
-                <span className="text-emerald-700 font-medium">تقویم فارسی / شمسی</span>
+              <div className="grid gap-3 md:grid-cols-2 items-start mb-4">
+                <DatePicker
+                  calendar={persian}
+                  locale={persian_fa}
+                  format="YYYY/MM/DD"
+                  value={(calendarValue ?? (selectedDateKey ? toPersianDateObject(selectedDateKey) : null)) as any}
+                  onChange={(value) => handleCalendarChange(value as DateObject)}
+                  className="w-full"
+                  containerClassName="w-full"
+                  inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
+                />
+                <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-2 text-sm text-gray-700">
+                  <div className="flex items-center justify-between flex-row">
+                    <span className="text-gray-500">روز انتخابی</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedDateKey
+                        ? formatPersianDate(selectedDateKey, "dddd D MMMM YYYY")
+                        : "انتخاب نشده"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between flex-row">
+                    <span className="text-gray-500">رویدادهای این روز</span>
+                    <span className="font-semibold text-indigo-700">{dayEvents.length}</span>
+                  </div>
+                  {upcomingCalendarEvents[0] && (
+                    <div className="flex items-start justify-between gap-2 flex-row">
+                      <span className="text-gray-500">نزدیک‌ترین رویداد بعدی</span>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">
+                          {upcomingCalendarEvents[0].label}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatPersianDate(upcomingCalendarEvents[0].date)} · {upcomingCalendarEvents[0].time}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="mt-4 space-y-2">
+
+              <div className="space-y-2">
                 {dayEvents.length === 0 && (
                   <div className="p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-600 text-center">
                     رویدادی برای تاریخ انتخاب‌شده ثبت نشده است.
@@ -1214,10 +1216,10 @@ function TechnicianDashboardView() {
                 {dayEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
+                    className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
                   >
                     <div className="space-y-1">
-                      <p className="text-sm text-gray-900 font-medium">{event.label}</p>
+                      <p className="text-sm text-gray-900 font-semibold">{event.label}</p>
                       <p className="text-xs text-gray-500">
                         {formatPersianDate(event.date)} · ساعت {event.time} · کانال: {event.channel}
                       </p>
@@ -1232,9 +1234,9 @@ function TechnicianDashboardView() {
               <div className="mt-5 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-2 flex-row">
                   <h4 className="text-sm font-semibold text-gray-900">رویدادهای بعدی</h4>
-                  <span className="text-xs text-gray-500">مرتب‌شده بر اساس تاریخ شمسی</span>
+                  <span className="text-xs text-gray-500">اولویت بر اساس تاریخ شمسی</span>
                 </div>
-                <div className="space-y-2">
+                <div className="grid gap-2 md:grid-cols-2">
                   {upcomingCalendarEvents.map((event) => (
                     <div
                       key={`upcoming-${event.id}`}
@@ -1251,6 +1253,87 @@ function TechnicianDashboardView() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-5 border border-gray-100 bg-white">
+              <div className="flex items-center justify-between mb-3 flex-row">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">ثبت رویداد جدید</h3>
+                  <p className="text-xs text-gray-500 mt-1">ثبت فارسی/شمسی با برچسب کانال فنی</p>
+                </div>
+                <span className="text-[11px] text-gray-500">تاریخ‌ها به شمسی ذخیره می‌شوند</span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-600">عنوان رویداد</label>
+                  <input
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
+                    placeholder="شرح رویداد فنی"
+                    value={eventForm.label}
+                    onChange={(e) => setEventForm((prev) => ({ ...prev, label: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-600">کانال</label>
+                    <select
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
+                      value={eventForm.channel}
+                      onChange={(e) => setEventForm((prev) => ({ ...prev, channel: e.target.value }))}
+                    >
+                      {Object.keys(channelAccent).map((channel) => (
+                        <option key={channel} value={channel}>
+                          {channel}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-600">زمان</label>
+                    <input
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-right"
+                      value={eventForm.time}
+                      onChange={(e) => setEventForm((prev) => ({ ...prev, time: e.target.value }))}
+                      placeholder="08:00"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 items-end">
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-600">تاریخ شمسی</label>
+                    <DatePicker
+                      calendar={persian}
+                      locale={persian_fa}
+                      format="YYYY/MM/DD"
+                      value={toPersianDateObject(eventForm.date) as any}
+                      onChange={(value) =>
+                        setEventForm((prev) => ({
+                          ...prev,
+                          date: (value as DateObject)?.format("YYYY-MM-DD") ?? prev.date,
+                        }))
+                      }
+                      className="w-full"
+                      containerClassName="w-full"
+                      inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 flex-row">
+                    <Button variant="secondary" className="w-full" onClick={handleJumpToToday}>
+                      امروز
+                    </Button>
+                    <Button variant="primary" className="w-full" onClick={handleAddCalendarEvent}>
+                      <Icon name="plus" size={16} className="ml-2" />
+                      ثبت در تقویم فنی
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 bg-slate-50 border border-slate-100 rounded-xl p-3 leading-relaxed">
+                  {selectedDateKey
+                    ? `رویدادهای این فرم با تاریخ ${formatPersianDate(selectedDateKey, "dddd D MMMM")} همگام شده است.`
+                    : "یک تاریخ شمسی را انتخاب کنید تا رویداد در همان روز ثبت شود."}
                 </div>
               </div>
             </Card>
