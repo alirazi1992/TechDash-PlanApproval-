@@ -41,9 +41,11 @@ type TaskItem = {
 
 type CollabCalendarEvent = {
   id: string;
-  day: number;
+  /** تاریخ به‌صورت شمسی (YYYY-MM-DD) */
+  date: string;
   label: string;
   channel: string;
+  time: string;
   accent: string;
   badgeClass: string;
 };
@@ -259,11 +261,60 @@ const priorityTasks: TaskItem[] = [
 ];
 
 const initialCollabCalendarEvents: CollabCalendarEvent[] = [
-  { id: "cal-23-1", day: 23, label: "واکشی کابل بدنه", channel: "میدانی", accent: "text-emerald-700", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  { id: "cal-23-2", day: 23, label: "حضور QA مشترک", channel: "کنترل کیفیت", accent: "text-blue-700", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  { id: "cal-24-1", day: 24, label: "تحویل بردهای الکتریک", channel: "کارگاه", accent: "text-indigo-700", badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  { id: "cal-24-2", day: 24, label: "هم‌ترازی سازه", channel: "QA", accent: "text-slate-700", badgeClass: "bg-slate-50 text-slate-700 border-slate-200" },
-  { id: "cal-25-1", day: 25, label: "جلسه آنلاین مدیران", channel: "مدیریت", accent: "text-amber-700", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
+  {
+    id: "cal-1403-07-23-1",
+    date: "1403-07-23",
+    label: "واکشی کابل بدنه",
+    channel: "میدانی",
+    time: "۰۸:۳۰",
+    accent: "text-emerald-700",
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  {
+    id: "cal-1403-07-23-2",
+    date: "1403-07-23",
+    label: "حضور QA مشترک",
+    channel: "کنترل کیفیت",
+    time: "۱۰:۱۵",
+    accent: "text-blue-700",
+    badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  {
+    id: "cal-1403-07-24-1",
+    date: "1403-07-24",
+    label: "تحویل بردهای الکتریک",
+    channel: "کارگاه",
+    time: "۰۹:۴۵",
+    accent: "text-indigo-700",
+    badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  {
+    id: "cal-1403-07-24-2",
+    date: "1403-07-24",
+    label: "هم‌ترازی سازه",
+    channel: "QA",
+    time: "۱۵:۰۰",
+    accent: "text-slate-700",
+    badgeClass: "bg-slate-50 text-slate-700 border-slate-200",
+  },
+  {
+    id: "cal-1403-07-25-1",
+    date: "1403-07-25",
+    label: "جلسه آنلاین مدیران",
+    channel: "مدیریت",
+    time: "۱۷:۳۰",
+    accent: "text-amber-700",
+    badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  {
+    id: "cal-1403-07-26-1",
+    date: "1403-07-26",
+    label: "هماهنگی شیفت شب",
+    channel: "میدانی",
+    time: "۲۰:۰۰",
+    accent: "text-emerald-700",
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
 ];
 
 const initialCollabBoardItems: CollabBoardItem[] = [
@@ -526,13 +577,26 @@ const highlightToneClass = (tone?: FeatureHighlight["tone"]) => {
   return "text-slate-700 bg-slate-50 border-slate-100";
 };
 
+const toPersianDateObject = (dateString: string) =>
+  new DateObject({
+    date: dateString,
+    format: "YYYY-MM-DD",
+    calendar: persian,
+    locale: persian_fa,
+  });
+
+const formatPersianDate = (dateString: string, pattern = "dddd D MMMM") =>
+  toPersianDateObject(dateString).format(pattern);
+
 // ------------------ View ------------------
 function TechnicianDashboardView() {
   const navigate = useNavigate();
   const [headerTab, setHeaderTab] = useState<DashboardHeaderTab>("general");
   const [timeRange, setTimeRange] = useState<TimeRange>("today");
   const [calendarValue, setCalendarValue] = useState<DateObject | null>(
-    new DateObject({ calendar: persian, locale: persian_fa })
+    initialCollabCalendarEvents[0]
+      ? toPersianDateObject(initialCollabCalendarEvents[0].date)
+      : new DateObject({ calendar: persian, locale: persian_fa })
   );
   const [tasks, setTasks] = useState<TaskItem[]>(
     priorityTasks.map((task) => ({ ...task, done: false }))
@@ -599,14 +663,25 @@ function TechnicianDashboardView() {
   const donutData = donutByRange[timeRange];
   const sparkData = sparkByRange[timeRange];
 
-  const selectedDay = calendarValue?.day;
-  const dayEvents = useMemo(
-    () =>
-      initialCollabCalendarEvents.filter((event) =>
-        selectedDay ? event.day === selectedDay : true
-      ),
-    [selectedDay]
+  const selectedDateKey = useMemo(
+    () => calendarValue?.format("YYYY-MM-DD"),
+    [calendarValue]
   );
+
+  const dayEvents = useMemo(() => {
+    if (!selectedDateKey) return initialCollabCalendarEvents;
+    return initialCollabCalendarEvents.filter((event) => event.date === selectedDateKey);
+  }, [selectedDateKey]);
+
+  const upcomingCalendarEvents = useMemo(() => {
+    const sorted = [...initialCollabCalendarEvents].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+
+    if (!selectedDateKey) return sorted.slice(0, 4);
+
+    return sorted.filter((event) => event.date >= selectedDateKey).slice(0, 4);
+  }, [selectedDateKey]);
 
   const availableTechnicians = mockAvatars.slice(0, 5);
 
@@ -977,19 +1052,36 @@ function TechnicianDashboardView() {
 
             <Card className="p-5 bg-white border border-gray-100">
               <div className="flex items-center justify-between mb-3 flex-row">
-                <h2 className="text-lg font-semibold text-gray-900">تقویم هماهنگی</h2>
-                <span className="text-sm text-gray-500">بازه هفتگی</span>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">تقویم فنی (شمسی)</h2>
+                  <p className="text-xs text-gray-500 mt-1">انتخاب تاریخ شمسی و رویدادهای فنی</p>
+                </div>
+                <span className="text-sm text-gray-500">بازه هفتگی · فارسی</span>
               </div>
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
+                format="YYYY/MM/DD"
                 value={calendarValue as any}
                 onChange={(value) => setCalendarValue(value as DateObject)}
                 className="w-full"
                 containerClassName="w-full"
                 inputClass="w-full rounded-xl border border-gray-200 px-3 py-2 text-right"
               />
+              <div className="flex items-center justify-between text-xs text-gray-500 mt-3 flex-row">
+                <span>
+                  {selectedDateKey
+                    ? `روز انتخابی: ${formatPersianDate(selectedDateKey, "dddd D MMMM YYYY")}`
+                    : "یک روز در تقویم انتخاب کنید"}
+                </span>
+                <span className="text-emerald-700 font-medium">تقویم فارسی / شمسی</span>
+              </div>
               <div className="mt-4 space-y-2">
+                {dayEvents.length === 0 && (
+                  <div className="p-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 text-sm text-gray-600 text-center">
+                    رویدادی برای تاریخ انتخاب‌شده ثبت نشده است.
+                  </div>
+                )}
                 {dayEvents.map((event) => (
                   <div
                     key={event.id}
@@ -997,11 +1089,40 @@ function TechnicianDashboardView() {
                   >
                     <div className="space-y-1">
                       <p className="text-sm text-gray-900 font-medium">{event.label}</p>
-                      <p className="text-xs text-gray-500">کانال: {event.channel}</p>
+                      <p className="text-xs text-gray-500">
+                        {formatPersianDate(event.date)} · ساعت {event.time} · کانال: {event.channel}
+                      </p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-lg border ${event.badgeClass}`}>{`روز ${event.day}`}</span>
+                    <span className={`text-xs px-2 py-1 rounded-lg border ${event.badgeClass}`}>
+                      {formatPersianDate(event.date, "YYYY/MM/DD")}
+                    </span>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-2 flex-row">
+                  <h4 className="text-sm font-semibold text-gray-900">رویدادهای بعدی</h4>
+                  <span className="text-xs text-gray-500">مرتب‌شده بر اساس تاریخ شمسی</span>
+                </div>
+                <div className="space-y-2">
+                  {upcomingCalendarEvents.map((event) => (
+                    <div
+                      key={`upcoming-${event.id}`}
+                      className="p-3 rounded-lg border border-gray-100 bg-white flex items-center justify-between flex-row"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-gray-900">{event.label}</p>
+                        <p className="text-xs text-gray-500">
+                          {formatPersianDate(event.date)} · {event.time} · {event.channel}
+                        </p>
+                      </div>
+                      <span className={`text-[11px] px-2 py-1 rounded-lg border ${event.badgeClass}`}>
+                        {formatPersianDate(event.date, "dddd D MMM")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
           </div>
