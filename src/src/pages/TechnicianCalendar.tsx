@@ -178,7 +178,7 @@ type ReportQueueItem = {
   sensitivity: string;
 };
 
-type DashboardHeaderTab = "general" | "workbench";
+type DashboardHeaderTab = "general" | "teamCalendar" | "workbench";
 
 // ------------------ Data ------------------
 const todayMetrics: Metric[] = [
@@ -612,6 +612,7 @@ function TechnicianDashboardView() {
 
   const headerTabs: { id: DashboardHeaderTab; label: string }[] = [
     { id: "general", label: "عمومی" },
+    { id: "teamCalendar", label: "تقویم تیمی" },
     { id: "workbench", label: "میزکار" },
   ];
 
@@ -1006,258 +1007,262 @@ function TechnicianDashboardView() {
           </div>
         )}
 
-        {headerTab === "general" && (
+        {headerTab === "teamCalendar" && (
           <>
             {/* Collaboration */}
             <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
-            <div className="flex items-center justify-between mb-4 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">برد هماهنگی تیمی</h2>
-              <Button variant="ghost" className="text-sm text-gray-700">
-                <Icon name="arrow-left" size={16} className="ml-2" />
-                مشاهده همه
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {initialCollabBoardItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-2"
-                >
-                  <div className="flex items-center justify-between flex-row">
-                    <div className="flex items-center gap-2 flex-row">
-                      <span className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-700">
-                        {item.utn}
-                      </span>
-                      <p className="font-semibold text-gray-900">{item.title}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-lg border ${item.statusClass}`}>
-                      {item.status}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-2 flex-row">
-                    <span>مالک: {item.owner}</span>
-                    <span>محل: {item.location}</span>
-                    <span>موعد: {item.due}</span>
-                    <span className="text-gray-500">کانال: {item.channel}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <div className="space-y-4">
-            <Card className="p-5 border border-gray-100 bg-white">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">اقدامات فوری</h3>
-              <div className="space-y-2">
-                {initialCollabActionItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-900 font-medium">{item.title}</p>
-                      <p className="text-xs text-gray-500">مسئول: {item.owner}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-lg border ${item.badgeClass}`}>{item.due}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-5 border border-gray-100 bg-white">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">جریان‌های تیمی</h3>
-              <div className="space-y-3">
-                {collabTeamStreams.map((stream) => (
-                  <div key={stream.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm text-gray-700 flex-row">
-                      <span className="font-medium text-gray-900">{stream.title}</span>
-                      <span className="text-xs text-gray-500">{stream.owner}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 text-right">{stream.focus}</p>
-                    <div className="w-full h-2 bg-gray-100 rounded-full">
-                      <div
-                        className={`h-full rounded-full ${stream.progressClass}`}
-                        style={{ width: `${stream.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Quick links & team */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
-            <div className="flex items-center justify-between mb-4 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">میانبرهای همکاری</h2>
-              <span className="text-sm text-gray-500">ارسال سریع فایل و جلسه</span>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              {collabQuickLinks.map((link) => (
-                <div
-                  key={link.id}
-                  className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-2"
-                >
-                  <div className="flex items-center justify-between flex-row">
-                    <p className="font-semibold text-gray-900">{link.title}</p>
-                    <span className={`text-xs px-2 py-1 rounded-lg border ${link.badgeClass}`}>
-                      {link.badge}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{link.detail}</p>
+              <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
+                <div className="flex items-center justify-between mb-4 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">برد هماهنگی تیمی</h2>
                   <Button variant="ghost" className="text-sm text-gray-700">
                     <Icon name="arrow-left" size={16} className="ml-2" />
-                    شروع
+                    مشاهده همه
                   </Button>
                 </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-5 border border-gray-100 bg-white">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h3 className="text-base font-semibold text-gray-900">حضور شیفت</h3>
-              <span className="text-xs text-gray-500">۵ نفر آنلاین</span>
-            </div>
-            <div className="space-y-3">
-              {availableTechnicians.map((tech) => (
-                <div
-                  key={tech.email}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100 flex-row"
-                >
-                  <div className="flex items-center gap-3 flex-row">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden" aria-hidden>
-                      {tech.imageUrl ? (
-                        <img src={tech.imageUrl} alt={tech.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-700 font-semibold">
-                          {tech.initials || tech.name.charAt(0)}
+                <div className="space-y-3">
+                  {initialCollabBoardItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between flex-row">
+                        <div className="flex items-center gap-2 flex-row">
+                          <span className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-700">
+                            {item.utn}
+                          </span>
+                          <p className="font-semibold text-gray-900">{item.title}</p>
                         </div>
-                      )}
+                        <span className={`text-xs px-2 py-1 rounded-lg border ${item.statusClass}`}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between text-sm text-gray-600 gap-2 flex-row">
+                        <span>مالک: {item.owner}</span>
+                        <span>محل: {item.location}</span>
+                        <span>موعد: {item.due}</span>
+                        <span className="text-gray-500">کانال: {item.channel}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{tech.name}</p>
-                      <p className="text-xs text-gray-500">{tech.role || "کارشناس فنی"}</p>
+                  ))}
+                </div>
+              </Card>
+
+              <div className="space-y-4">
+                <Card className="p-5 border border-gray-100 bg-white">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">اقدامات فوری</h3>
+                  <div className="space-y-2">
+                    {initialCollabActionItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-900 font-medium">{item.title}</p>
+                          <p className="text-xs text-gray-500">مسئول: {item.owner}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-lg border ${item.badgeClass}`}>{item.due}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                <Card className="p-5 border border-gray-100 bg-white">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">جریان‌های تیمی</h3>
+                  <div className="space-y-3">
+                    {collabTeamStreams.map((stream) => (
+                      <div key={stream.id} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm text-gray-700 flex-row">
+                          <span className="font-medium text-gray-900">{stream.title}</span>
+                          <span className="text-xs text-gray-500">{stream.owner}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 text-right">{stream.focus}</p>
+                        <div className="w-full h-2 bg-gray-100 rounded-full">
+                          <div
+                            className={`h-full rounded-full ${stream.progressClass}`}
+                            style={{ width: `${stream.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            {/* Quick links & team */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card className="p-5 border border-gray-100 bg-white lg:col-span-2">
+                <div className="flex items-center justify-between mb-4 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">میانبرهای همکاری</h2>
+                  <span className="text-sm text-gray-500">ارسال سریع فایل و جلسه</span>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {collabQuickLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="p-4 rounded-xl border border-gray-100 bg-gray-50 space-y-2"
+                    >
+                      <div className="flex items-center justify-between flex-row">
+                        <p className="font-semibold text-gray-900">{link.title}</p>
+                        <span className={`text-xs px-2 py-1 rounded-lg border ${link.badgeClass}`}>
+                          {link.badge}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 leading-relaxed">{link.detail}</p>
+                      <Button variant="ghost" className="text-sm text-gray-700">
+                        <Icon name="arrow-left" size={16} className="ml-2" />
+                        شروع
+                      </Button>
                     </div>
-                  </div>
-                  <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
-                    آماده
-                  </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+              </Card>
 
-        {/* Workflow & Reports */}
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="p-5 border border-gray-100 bg-white">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">ارجاعات در جریان</h2>
-              <span className="text-sm text-gray-500">SLA زنده</span>
-            </div>
-            <div className="space-y-2">
-              {initialWorkflowAssignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-2 flex-row"
-                >
-                  <div className="flex items-center gap-2 flex-row text-sm text-gray-900 font-medium">
-                    <span className="px-2 py-1 rounded-lg border border-gray-200 text-xs">{assignment.utn}</span>
-                    {assignment.title}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-600 flex-row">
-                    <span>مسئول: {assignment.tech}</span>
-                    <span className="text-gray-500">مرحله: {assignment.stage}</span>
-                    <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
-                      {assignment.sla}
-                    </span>
-                  </div>
+              <Card className="p-5 border border-gray-100 bg-white">
+                <div className="flex items-center justify-between mb-3 flex-row">
+                  <h3 className="text-base font-semibold text-gray-900">حضور شیفت</h3>
+                  <span className="text-xs text-gray-500">۵ نفر آنلاین</span>
                 </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-5 border border-gray-100 bg-white">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">صف گزارش‌ها</h2>
-              <span className="text-sm text-gray-500">آماده انتشار</span>
-            </div>
-            <div className="space-y-2">
-              {initialReportQueue.map((report) => (
-                <div
-                  key={report.id}
-                  className="p-3 rounded-lg border border-gray-100 bg-gray-50 space-y-2"
-                >
-                  <div className="flex items-center justify-between flex-row">
-                    <div className="flex items-center gap-2 flex-row">
-                      <span className="px-2 py-1 rounded-lg border border-gray-200 text-xs">{report.utn}</span>
-                      <p className="font-medium text-gray-900">{report.subject}</p>
+                <div className="space-y-3">
+                  {availableTechnicians.map((tech) => (
+                    <div
+                      key={tech.email}
+                      className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100 flex-row"
+                    >
+                      <div className="flex items-center gap-3 flex-row">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden" aria-hidden>
+                          {tech.imageUrl ? (
+                            <img src={tech.imageUrl} alt={tech.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-700 font-semibold">
+                              {tech.initials || tech.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{tech.name}</p>
+                          <p className="text-xs text-gray-500">{tech.role || "کارشناس فنی"}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
+                        آماده
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500">{report.due}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 flex-row">
-                    <span>مالک: {report.owner}</span>
-                    <span>مرحله: {report.stage}</span>
-                    <span>کانال: {report.channel}</span>
-                    <span className="px-2 py-1 rounded-lg border border-gray-200">{report.sensitivity}</span>
-                    <span className="text-emerald-700">{report.completeness}% تکمیل</span>
-                    <span className="text-gray-500">پیوست: {report.attachments}</span>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </Card>
             </div>
-          </Card>
-        </div>
+          </>
+        )}
 
-        {/* Knowledge & Support */}
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="p-5 border border-gray-100 bg-white">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">منابع دانش</h2>
-              <span className="text-sm text-gray-500">به‌روز شده</span>
-            </div>
-            <div className="space-y-3">
-              {knowledgeBaseResources.map((resource) => (
-                <div
-                  key={resource.id}
-                  className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{resource.title}</p>
-                    <p className="text-sm text-gray-600">{resource.detail}</p>
-                  </div>
-                  <Button variant="ghost" className="text-sm text-gray-700">
-                    <Icon name="download" size={16} className="ml-2" />
-                    باز کردن
-                  </Button>
+        {headerTab === "general" && (
+          <>
+            {/* Workflow & Reports */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card className="p-5 border border-gray-100 bg-white">
+                <div className="flex items-center justify-between mb-3 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">ارجاعات در جریان</h2>
+                  <span className="text-sm text-gray-500">SLA زنده</span>
                 </div>
-              ))}
-            </div>
-          </Card>
+                <div className="space-y-2">
+                  {initialWorkflowAssignments.map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-2 flex-row"
+                    >
+                      <div className="flex items-center gap-2 flex-row text-sm text-gray-900 font-medium">
+                        <span className="px-2 py-1 rounded-lg border border-gray-200 text-xs">{assignment.utn}</span>
+                        {assignment.title}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-600 flex-row">
+                        <span>مسئول: {assignment.tech}</span>
+                        <span className="text-gray-500">مرحله: {assignment.stage}</span>
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1">
+                          {assignment.sla}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
 
-          <Card className="p-5 border border-gray-100 bg-white">
-            <div className="flex items-center justify-between mb-3 flex-row">
-              <h2 className="text-lg font-semibold text-gray-900">حمایت سریع</h2>
-              <span className="text-sm text-gray-500">کانال‌های تیم فنی</span>
+              <Card className="p-5 border border-gray-100 bg-white">
+                <div className="flex items-center justify-between mb-3 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">صف گزارش‌ها</h2>
+                  <span className="text-sm text-gray-500">آماده انتشار</span>
+                </div>
+                <div className="space-y-2">
+                  {initialReportQueue.map((report) => (
+                    <div
+                      key={report.id}
+                      className="p-3 rounded-lg border border-gray-100 bg-gray-50 space-y-2"
+                    >
+                      <div className="flex items-center justify-between flex-row">
+                        <div className="flex items-center gap-2 flex-row">
+                          <span className="px-2 py-1 rounded-lg border border-gray-200 text-xs">{report.utn}</span>
+                          <p className="font-medium text-gray-900">{report.subject}</p>
+                        </div>
+                        <span className="text-xs text-gray-500">{report.due}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 flex-row">
+                        <span>مالک: {report.owner}</span>
+                        <span>مرحله: {report.stage}</span>
+                        <span>کانال: {report.channel}</span>
+                        <span className="px-2 py-1 rounded-lg border border-gray-200">{report.sensitivity}</span>
+                        <span className="text-emerald-700">{report.completeness}% تکمیل</span>
+                        <span className="text-gray-500">پیوست: {report.attachments}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {supportShortcuts.map((shortcut) => (
-                <button
-                  key={shortcut.id}
-                  className="p-3 rounded-xl border border-gray-100 bg-gray-50 text-right hover:border-gray-200 transition"
-                  onClick={() => handleShortcutClick(shortcut.title)}
-                >
-                  <p className="font-medium text-gray-900">{shortcut.title}</p>
-                  <p className="text-sm text-gray-600">{shortcut.detail}</p>
-                </button>
-              ))}
+
+            {/* Knowledge & Support */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card className="p-5 border border-gray-100 bg-white">
+                <div className="flex items-center justify-between mb-3 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">منابع دانش</h2>
+                  <span className="text-sm text-gray-500">به‌روز شده</span>
+                </div>
+                <div className="space-y-3">
+                  {knowledgeBaseResources.map((resource) => (
+                    <div
+                      key={resource.id}
+                      className="p-3 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-between flex-row"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">{resource.title}</p>
+                        <p className="text-sm text-gray-600">{resource.detail}</p>
+                      </div>
+                      <Button variant="ghost" className="text-sm text-gray-700">
+                        <Icon name="download" size={16} className="ml-2" />
+                        باز کردن
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="p-5 border border-gray-100 bg-white">
+                <div className="flex items-center justify-between mb-3 flex-row">
+                  <h2 className="text-lg font-semibold text-gray-900">حمایت سریع</h2>
+                  <span className="text-sm text-gray-500">کانال‌های تیم فنی</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {supportShortcuts.map((shortcut) => (
+                    <button
+                      key={shortcut.id}
+                      className="p-3 rounded-xl border border-gray-100 bg-gray-50 text-right hover:border-gray-200 transition"
+                      onClick={() => handleShortcutClick(shortcut.title)}
+                    >
+                      <p className="font-medium text-gray-900">{shortcut.title}</p>
+                      <p className="text-sm text-gray-600">{shortcut.detail}</p>
+                    </button>
+                  ))}
+                </div>
+              </Card>
             </div>
-          </Card>
-        </div>
           </>
         )}
       </div>
